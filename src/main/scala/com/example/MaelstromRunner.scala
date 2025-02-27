@@ -20,4 +20,18 @@ object MaelstromRunner {
       .compile
       .drain
   }
+
+  def runMulti(handler: Json => List[Json]): IO[Unit] = {
+    stdinUtf8[IO](4096)
+      .through(fs2.text.lines)
+      .map { str =>
+        io.circe.parser.parse(str).toOption.get
+      }
+      .map(handler(_))
+      .map(_.map(_.asJson.noSpaces).mkString("\n") + "\n")
+      .through(fs2.text.utf8.encode)
+      .through(fs2.io.writeOutputStream(IO(System.out)))
+      .compile
+      .drain
+  }
 }
