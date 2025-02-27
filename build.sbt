@@ -32,3 +32,20 @@ lazy val echo = (project in file("echo"))
       .toSeq,
     nativeImageVersion := "22.3.0" // It should be at least version 21.0.0
   )
+
+lazy val `unique-ids` = (project in file("unique-ids"))
+  .dependsOn(root)
+  .enablePlugins(NativeImagePlugin)
+  .settings(
+    name := "unique-ids",
+    Compile / mainClass := Some("com.example.Main"),
+    nativeImageOptions ++= Seq(
+      "--no-fallback",
+      "--install-exit-handlers",
+      "-H:IncludeResources=.*",
+    ) ++ Option(nativeImageAgentOutputDir.value)
+      .filter(_.exists())
+      .map(file => s"-H:ReflectionConfigurationFiles=${(file / "reflect-config.json").absolutePath}")
+      .toSeq,
+    nativeImageVersion := "22.3.0" // It should be at least version 21.0.0
+  )

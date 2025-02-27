@@ -12,20 +12,21 @@ object Main extends IOApp.Simple {
 
   private val nodeId = AtomicReference[String]("")
   private val msgId = AtomicInteger(0)
+  private val id = AtomicInteger(0)
 
-  // https://fly.io/dist-sys/1/
-  // https://github.com/jepsen-io/maelstrom/blob/main/doc/02-echo/index.md
+  // https://fly.io/dist-sys/2/
   private def handler(msg: Json): Json = {
     System.err.println(s"input = ${msg.noSpaces}")
     val obj = msg.asObject.get
     val src = obj.apply("src").get.asString.get
     val body = obj.apply("body").get.asObject.get
     val msgType = body.apply("type").flatMap(_.asString).getOrElse("")
-    val res1 = if (msgType.equalsIgnoreCase("echo")) {
+    val res1 = if (msgType.equalsIgnoreCase("generate")) {
       val in_reply_to = body.apply("msg_id").get
       val newBody = body
+        .add("id", Json.fromString(s"${nodeId.get()}_${id.incrementAndGet()}"))
         .add("msg_id", Json.fromInt(msgId.incrementAndGet()))
-        .add("type", Json.fromString("echo_ok"))
+        .add("type", Json.fromString("generate_ok"))
         .add("in_reply_to", in_reply_to)
         .toJson
       obj.add("body", newBody)
